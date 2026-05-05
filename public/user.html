@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediQ — Patient Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/shared.css">
+<style>
+  /* ── page-specific styles ── */
+  .welcome-banner{background:linear-gradient(135deg,rgba(232,25,44,0.12),rgba(232,25,44,0.03));border:1px solid rgba(232,25,44,0.15);border-radius:12px;padding:28px 32px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;}
+  .welcome-text h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--white);letter-spacing:-0.5px;}
+  .welcome-text p{font-size:13px;color:rgba(250,247,242,0.4);margin-top:4px;}
+  .blood-badge{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--red);background:rgba(232,25,44,0.1);border:2px solid rgba(232,25,44,0.2);width:72px;height:72px;border-radius:12px;display:flex;align-items:center;justify-content:center;}
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;}
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;}
+  .stat-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(250,247,242,0.3);margin-bottom:8px;}
+  .stat-value{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--white);}
+  .stat-sub{font-size:11px;color:rgba(250,247,242,0.25);margin-top:4px;}
+  .hosp-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:22px;transition:all .2s;cursor:pointer;margin-bottom:14px;}
+  .hosp-card:hover{border-color:rgba(232,25,44,0.3);transform:translateY(-1px);}
+  .filter-btn{padding:7px 16px;border-radius:6px;border:1px solid var(--border);background:transparent;color:rgba(250,247,242,0.4);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;}
+  .filter-btn.active{background:var(--red);border-color:var(--red);color:white;}
+  .ep-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:16px;}
+  .ep-label{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:rgba(250,247,242,0.3);margin-bottom:4px;}
+  .ep-value{font-size:14px;color:var(--cream);}
+  .save-success{background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:10px 14px;font-size:13px;color:var(--green);margin-bottom:14px;display:none;}
+  /* token success */
+  .token-success{text-align:center;padding:10px 0;}
+  .token-big{background:linear-gradient(135deg,rgba(232,25,44,0.15),rgba(232,25,44,0.05));border:2px solid rgba(232,25,44,0.3);border-radius:14px;padding:24px;margin:20px 0;}
+  .tl{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--red);margin-bottom:8px;}
+  .ti{font-family:'Syne',sans-serif;font-size:48px;font-weight:800;color:var(--white);letter-spacing:-1px;line-height:1;}
+  .tq{font-size:13px;color:rgba(250,247,242,0.4);margin-top:8px;}
+  .token-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .t-item{background:rgba(255,255,255,0.04);border-radius:8px;padding:12px;}
+  .il{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(250,247,242,0.3);margin-bottom:4px;}
+  .iv{font-size:13px;font-weight:500;color:var(--cream);}
+  .m-hosp-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--white);margin-bottom:4px;}
+  .m-sub{font-size:13px;color:rgba(250,247,242,0.4);margin-bottom:20px;}
+</style>
+</head>
+<body>
+
+<!-- ═══════ AUTH SCREEN ═══════ -->
+<div id="authScreen" style="display:none;">
+  <div class="auth-wrap">
+    <div class="auth-left">
+      <div class="auth-logo">Medi<span>Q</span></div>
+      <div class="auth-hero-text">
+        <h1>Your health,<br><span>always ready.</span></h1>
+        <p>Emergency-first patient portal. Book hospitals, manage your medical profile, and get help fast.</p>
+      </div>
+      <div class="auth-trust">
+        <div class="trust-item"><div class="trust-icon">🔒</div><div class="trust-label"><strong>Secure</strong>Encrypted data</div></div>
+        <div class="trust-item"><div class="trust-icon">⚡</div><div class="trust-label"><strong>Fast</strong>Instant booking</div></div>
+        <div class="trust-item"><div class="trust-icon">🏥</div><div class="trust-label"><strong>Live</strong>Real hospitals</div></div>
+      </div>
+    </div>
+    <div class="auth-right">
+      <div class="auth-form-box">
+        <div class="auth-tabs">
+          <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+          <button class="auth-tab" onclick="switchTab('signup')">Create Account</button>
+        </div>
+
+        <!-- LOGIN -->
+        <div id="loginForm">
+          <div class="form-title">Welcome back</div>
+          <div class="form-subtitle">Sign in to your patient account.</div>
+          <div class="form-error" id="loginError"></div>
+          <div class="form-group"><label>Email</label><input type="email" id="l_email" placeholder="ravi@demo.com"></div>
+          <div class="form-group"><label>Password</label><input type="password" id="l_pass" placeholder="••••••••"></div>
+          <button class="btn-submit" id="loginBtn" onclick="handleLogin()">Sign In →</button>
+          <p class="form-note">Demo: ravi@demo.com / Demo@1234</p>
+        </div>
+
+        <!-- SIGNUP -->
+        <div id="signupForm" class="hidden">
+          <div class="form-title">Create your profile</div>
+          <div class="form-subtitle">Set up your account with emergency details.</div>
+          <div class="form-error" id="signupError"></div>
+          <div class="form-row">
+            <div class="form-group"><label>First Name</label><input type="text" id="s_first" placeholder="Ravi"></div>
+            <div class="form-group"><label>Last Name</label><input type="text" id="s_last" placeholder="Sharma"></div>
+          </div>
+          <div class="form-group"><label>Email</label><input type="email" id="s_email" placeholder="you@example.com"></div>
+          <div class="form-group"><label>Password</label><input type="password" id="s_pass" placeholder="Min 6 characters"></div>
+          <div class="form-row">
+            <div class="form-group"><label>Date of Birth</label><input type="date" id="s_dob"></div>
+            <div class="form-group"><label>Phone</label><input type="tel" id="s_phone" placeholder="+91 98765 43210"></div>
+          </div>
+          <div class="em-section">
+            <div class="em-icon">🚨</div>
+            <div><h3>Emergency Medical Details</h3><p>Critical info saved securely for emergencies</p></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Blood Group</label>
+              <select id="s_blood">
+                <option value="">Select</option>
+                <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Primary Condition</label>
+              <select id="s_cond">
+                <option>None / Healthy</option><option>Diabetes</option><option>Hypertension</option>
+                <option>Heart Disease</option><option>Asthma</option><option>Epilepsy</option><option>Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group"><label>Known Allergies</label><input type="text" id="s_allergy" placeholder="e.g. Penicillin, Sulfa drugs..."></div>
+          <div class="form-group"><label>Current Medications</label><input type="text" id="s_meds" placeholder="e.g. Metformin 500mg..."></div>
+          <div class="form-row">
+            <div class="form-group"><label>Emergency Contact Name</label><input type="text" id="s_ecname" placeholder="Contact person"></div>
+            <div class="form-group"><label>Emergency Contact Phone</label><input type="tel" id="s_ecphone" placeholder="+91 98765 00000"></div>
+          </div>
+          <div class="form-group"><label>Additional Notes</label><textarea id="s_notes" rows="2" placeholder="Any critical medical info..."></textarea></div>
+          <button class="btn-submit" id="signupBtn" onclick="handleSignup()">Create Account & Enter →</button>
+          <p class="form-note">Your medical data is encrypted end-to-end.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ DASHBOARD ═══════ -->
+<div id="dashboard" style="display:none;">
+  <div class="dash-layout">
+    <div class="sidebar">
+      <div class="sidebar-logo">Medi<span>Q</span></div>
+      <div class="user-mini">
+        <div class="user-mini-name" id="sidebarName">—</div>
+        <div class="u-badge"><span class="dot-green"></span> Active</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-sec-label">Main</div>
+        <div class="nav-item active" onclick="showPage('overview')"><span class="nav-icon">◉</span> Overview</div>
+        <div class="nav-item" onclick="showPage('finder')"><span class="nav-icon">🏥</span> Find Hospitals</div>
+        <div class="nav-item" onclick="showPage('appointments')"><span class="nav-icon">📋</span> My Appointments</div>
+        <div class="nav-sec-label" style="margin-top:14px;">Profile</div>
+        <div class="nav-item" onclick="showPage('ep')"><span class="nav-icon">🚨</span> Emergency Profile</div>
+        <div class="nav-item" onclick="showPage('settings')"><span class="nav-icon">⚙</span> Settings</div>
+        <div class="nav-item" onclick="logout()"><span class="nav-icon">←</span> Sign Out</div>
+      </div>
+      <div class="sos-box">
+        <div class="t">⚡ Emergency?</div>
+        <div class="d">Find nearest ER-equipped hospitals instantly.</div>
+        <button class="btn-sos" onclick="showPage('finder');setFilter('Emergency');">🚨 SOS — Find ER Now</button>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="topbar">
+        <div id="pageTitleBar" class="page-title">Overview</div>
+        <div id="topbarUser" style="font-size:13px;color:rgba(250,247,242,0.35);">—</div>
+      </div>
+
+      <!-- OVERVIEW PAGE -->
+      <div id="page-overview" class="page active">
+        <div class="welcome-banner">
+          <div class="welcome-text">
+            <h2 id="welcomeMsg">Good morning 👋</h2>
+            <p>Your emergency profile is active. Stay prepared.</p>
+          </div>
+          <div class="blood-badge" id="overviewBlood">—</div>
+        </div>
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-label">Total Appts</div><div class="stat-value" id="st1">—</div><div class="stat-sub" id="st1s">Loading…</div></div>
+          <div class="stat-card"><div class="stat-label">Upcoming</div><div class="stat-value" id="st2">—</div><div class="stat-sub">Pending + confirmed</div></div>
+          <div class="stat-card"><div class="stat-label">Active Token</div><div class="stat-value" id="st3" style="color:var(--red)">—</div><div class="stat-sub" id="st3s">—</div></div>
+          <div class="stat-card"><div class="stat-label">Blood Group</div><div class="stat-value" id="st4" style="color:var(--red)">—</div><div class="stat-sub">Emergency profile</div></div>
+        </div>
+        <div class="sh"><h3>Recent Appointments</h3><button class="btn-sm red" onclick="showPage('finder')">+ Book New</button></div>
+        <div id="overviewAppts"><div class="spinner">Loading…</div></div>
+      </div>
+
+      <!-- FIND HOSPITALS PAGE -->
+      <div id="page-finder" class="page">
+        <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
+          <input type="text" id="hospSearch" placeholder="Search hospitals, areas…" oninput="debounceSearch()"
+            style="flex:1;min-width:200px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--cream);font-size:14px;outline:none;">
+          <button class="filter-btn active" data-filter="All"       onclick="setFilter('All')">All</button>
+          <button class="filter-btn"        data-filter="Emergency"  onclick="setFilter('Emergency')">🚨 Emergency</button>
+          <button class="filter-btn"        data-filter="Cardiology" onclick="setFilter('Cardiology')">❤️ Cardiology</button>
+          <button class="filter-btn"        data-filter="Orthopedics" onclick="setFilter('Orthopedics')">🦴 Ortho</button>
+          <button class="filter-btn"        data-filter="Neurology"  onclick="setFilter('Neurology')">🧠 Neurology</button>
+        </div>
+        <div id="hospitalGrid"><div class="spinner">Finding hospitals…</div></div>
+      </div>
+
+      <!-- MY APPOINTMENTS PAGE -->
+      <div id="page-appointments" class="page">
+        <div class="sh"><h3>My Appointments</h3><button class="btn-sm red" onclick="showPage('finder')">+ Book New</button></div>
+        <div id="apptList"><div class="spinner">Loading…</div></div>
+      </div>
+
+      <!-- EMERGENCY PROFILE PAGE -->
+      <div id="page-ep" class="page">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <!-- View -->
+          <div>
+            <div class="sh"><h3>Emergency Profile</h3></div>
+            <div class="ep-card">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div><div class="ep-label">Blood Group</div><div class="ep-value" id="ep_blood" style="font-family:Syne,sans-serif;font-size:22px;font-weight:800;color:var(--red);">—</div></div>
+                <div><div class="ep-label">Primary Condition</div><div class="ep-value" id="ep_cond">—</div></div>
+                <div><div class="ep-label">Secondary Condition</div><div class="ep-value" id="ep_cond2">—</div></div>
+                <div><div class="ep-label">Allergies</div><div class="ep-value" id="ep_allergy" style="color:var(--amber);">—</div></div>
+                <div><div class="ep-label">Medications</div><div class="ep-value" id="ep_meds">—</div></div>
+                <div><div class="ep-label">Surgical History</div><div class="ep-value" id="ep_surgery">—</div></div>
+              </div>
+            </div>
+            <div class="ep-card">
+              <div class="sh" style="margin-bottom:12px;"><h3>Emergency Contacts</h3></div>
+              <div class="ir"><span class="k">Primary Contact</span><span class="v" id="ep_ecname" style="color:var(--green);">—</span></div>
+              <div class="ir"><span class="k">Primary Phone</span><span class="v" id="ep_ecphone">—</span></div>
+              <div class="ir"><span class="k">Secondary Contact</span><span class="v" id="ep_ec2name">—</span></div>
+              <div class="ir"><span class="k">Secondary Phone</span><span class="v" id="ep_ec2phone">—</span></div>
+            </div>
+            <div class="ep-card">
+              <div class="ep-label">Additional Notes</div>
+              <div class="ep-value" id="ep_notes" style="margin-top:6px;line-height:1.6;color:rgba(250,247,242,0.5);">—</div>
+            </div>
+          </div>
+          <!-- Edit -->
+          <div>
+            <div class="sh"><h3>Edit Profile</h3></div>
+            <div class="save-success" id="saveSuccess"></div>
+            <div class="form-error" id="updError"></div>
+            <div class="form-group"><label>Blood Group</label>
+              <select id="upd_blood">
+                <option value="">Select</option>
+                <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Primary Condition</label>
+                <select id="upd_cond">
+                  <option>None / Healthy</option><option>Diabetes</option><option>Hypertension</option>
+                  <option>Heart Disease</option><option>Asthma</option><option>Epilepsy</option><option>Other</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Secondary Condition</label><input type="text" id="upd_cond2" placeholder="Optional"></div>
+            </div>
+            <div class="form-group"><label>Allergies</label><input type="text" id="upd_allergy" placeholder="Penicillin, Sulfa..."></div>
+            <div class="form-group"><label>Medications</label><input type="text" id="upd_meds" placeholder="Metformin 500mg..."></div>
+            <div class="form-row">
+              <div class="form-group"><label>Emergency Contact</label><input type="text" id="upd_ecname" placeholder="Name"></div>
+              <div class="form-group"><label>Contact Phone</label><input type="tel" id="upd_ecphone" placeholder="+91..."></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Secondary Contact</label><input type="text" id="upd_ec2name" placeholder="Name"></div>
+              <div class="form-group"><label>Secondary Phone</label><input type="tel" id="upd_ec2phone" placeholder="+91..."></div>
+            </div>
+            <div class="form-group"><label>Surgical History</label><input type="text" id="upd_surgery" placeholder="Optional"></div>
+            <div class="form-group"><label>Additional Notes</label><textarea id="upd_notes" rows="3" placeholder="Any critical info…"></textarea></div>
+            <button class="btn-submit" id="saveEPBtn" style="max-width:180px;" onclick="saveEmergencyProfile()">Save Changes</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS PAGE -->
+      <div id="page-settings" class="page">
+        <div style="max-width:500px;">
+          <div class="info-card" style="margin-bottom:16px;">
+            <div class="ic-title">Account Info</div>
+            <div class="ir"><span class="k">Full Name</span><span class="v" id="setName">—</span></div>
+            <div class="ir"><span class="k">Email</span><span class="v" id="setEmail">—</span></div>
+            <div class="ir"><span class="k">Phone</span><span class="v" id="setPhone">—</span></div>
+          </div>
+          <div class="info-card" style="background:rgba(232,25,44,0.05);border-color:rgba(232,25,44,0.15);">
+            <div class="ic-title" style="color:var(--red-light);">🆘 Emergency Numbers</div>
+            <div class="ir"><span class="k">National Emergency</span><span class="v" style="color:var(--red);font-weight:700;">112</span></div>
+            <div class="ir"><span class="k">Ambulance</span><span class="v" style="color:var(--red);font-weight:700;">108</span></div>
+            <div class="ir"><span class="k">Police</span><span class="v" style="color:var(--red);font-weight:700;">100</span></div>
+            <div class="ir"><span class="k">Fire</span><span class="v" style="color:var(--red);font-weight:700;">101</span></div>
+          </div>
+          <button class="btn-sm" onclick="logout()" style="margin-top:16px;width:100%;padding:12px;color:var(--red);border-color:rgba(232,25,44,0.2);">Sign Out</button>
+        </div>
+      </div>
+
+    </div><!-- /main-content -->
+  </div><!-- /dash-layout -->
+</div>
+
+<!-- BOOKING MODAL -->
+<div class="modal-overlay" id="bookingModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="bookingForm">
+      <div class="m-hosp-name" id="mHospName">—</div>
+      <div class="m-sub" id="mHospSub">—</div>
+      <div class="form-error" id="bookErr"></div>
+      <div class="form-group"><label>Department</label><select id="mDept"></select></div>
+      <div class="form-row">
+        <div class="form-group"><label>Date</label><input type="date" id="mDate"></div>
+        <div class="form-group"><label>Time Slot</label>
+          <select id="mSlot">
+            <option>Morning (9–12 AM)</option>
+            <option>Afternoon (12–3 PM)</option>
+            <option>Evening (3–6 PM)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Reason for Visit</label><textarea id="mReason" rows="3" placeholder="Brief description…"></textarea></div>
+      <div style="background:rgba(232,25,44,0.06);border:1px solid rgba(232,25,44,0.12);border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;color:rgba(250,247,242,0.45);">
+        📋 Your <strong style="color:rgba(250,247,242,0.7);">emergency profile</strong> will be shared with the hospital.
+      </div>
+      <button class="btn-submit" id="bookBtn" onclick="confirmBooking()">Confirm & Get Token →</button>
+    </div>
+    <div class="token-success" id="tokenSuccess" style="display:none;">
+      <div style="font-size:38px;margin-bottom:10px;">✅</div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--white);">Appointment Confirmed!</div>
+      <div class="token-big">
+        <div class="tl">Your Token</div>
+        <div class="ti" id="genToken">—</div>
+        <div class="tq" id="genQueue">—</div>
+      </div>
+      <div class="token-grid">
+        <div class="t-item"><div class="il">Hospital</div><div class="iv" id="tHosp">—</div></div>
+        <div class="t-item"><div class="il">Department</div><div class="iv" id="tDept">—</div></div>
+        <div class="t-item"><div class="il">Date</div><div class="iv" id="tDate">—</div></div>
+        <div class="t-item"><div class="il">Status</div><div class="iv" style="color:var(--green)">✓ Pending</div></div>
+      </div>
+      <button class="btn-submit" style="margin-top:20px;" onclick="closeModal();showPage('appointments');">View Appointments →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ JS MODULES (order matters) ═══ -->
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/dashboard.js"></script>
+<script src="/js/hospitals.js"></script>
+<script src="/js/appointments.js"></script>
+<script src="/js/profile.js"></script>
+</body>
+</html>

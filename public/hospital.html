@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediQ — Hospital Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/shared.css">
+<style>
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;}
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;}
+  .stat-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(250,247,242,0.3);margin-bottom:8px;}
+  .stat-value{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--white);}
+  .stat-sub{font-size:11px;color:rgba(250,247,242,0.25);margin-top:4px;}
+  .appt-filter-btn{padding:7px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:rgba(250,247,242,0.4);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;}
+  .appt-filter-btn.active{background:var(--red);border-color:var(--red);color:white;}
+  .toggle{position:relative;width:44px;height:24px;display:inline-block;}
+  .toggle input{opacity:0;width:0;height:0;}
+  .toggle-slider{position:absolute;cursor:pointer;inset:0;background:rgba(255,255,255,0.1);border-radius:24px;transition:.3s;}
+  .toggle-slider:before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s;}
+  .toggle input:checked + .toggle-slider{background:var(--green);}
+  .toggle input:checked + .toggle-slider:before{transform:translateX(20px);}
+  #bedsGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  #deptGrid{display:flex;flex-direction:column;gap:10px;}
+</style>
+</head>
+<body>
+
+<!-- ═══════ AUTH SCREEN ═══════ -->
+<div id="hAuthScreen" style="display:none;">
+  <div class="auth-wrap">
+    <div class="auth-left">
+      <div class="auth-logo">Medi<span>Q</span></div>
+      <div class="auth-hero-text">
+        <h1>Hospital<br><span>Command Center.</span></h1>
+        <p>Manage appointments, beds, queues and departments — all in one place.</p>
+      </div>
+      <div class="auth-trust">
+        <div class="trust-item"><div class="trust-icon">📋</div><div class="trust-label"><strong>Appointments</strong>Live management</div></div>
+        <div class="trust-item"><div class="trust-icon">🛏️</div><div class="trust-label"><strong>Beds</strong>Real-time updates</div></div>
+        <div class="trust-item"><div class="trust-icon">🎫</div><div class="trust-label"><strong>Queue</strong>Token system</div></div>
+      </div>
+    </div>
+    <div class="auth-right">
+      <div class="auth-form-box">
+        <div class="auth-tabs">
+          <button class="auth-tab active" onclick="switchHospTab('login')">Sign In</button>
+          <button class="auth-tab" onclick="switchHospTab('register')">Register</button>
+        </div>
+
+        <!-- LOGIN -->
+        <div id="hLoginForm">
+          <div class="form-title">Hospital Sign In</div>
+          <div class="form-subtitle">Access your hospital dashboard.</div>
+          <div class="form-error" id="hLoginError"></div>
+          <div class="form-group"><label>Email</label><input type="email" id="hl_email" placeholder="admin@hospital.com"></div>
+          <div class="form-group"><label>Password</label><input type="password" id="hl_pass" placeholder="••••••••"></div>
+          <button class="btn-submit" id="hLoginBtn" onclick="handleHospLogin()">Sign In →</button>
+          <p class="form-note">Demo: admin@apollo-bangalore.com / Hospital@123</p>
+        </div>
+
+        <!-- REGISTER -->
+        <div id="hRegForm" class="hidden">
+          <div class="form-title">Register Hospital</div>
+          <div class="form-subtitle">Create your hospital account.</div>
+          <div class="form-error" id="hRegError"></div>
+          <div class="form-group"><label>Hospital Name</label><input type="text" id="hr_name" placeholder="Apollo Hospitals"></div>
+          <div class="form-row">
+            <div class="form-group"><label>Email</label><input type="email" id="hr_email" placeholder="admin@hospital.com"></div>
+            <div class="form-group"><label>Phone</label><input type="tel" id="hr_phone" placeholder="+91 80 1234 5678"></div>
+          </div>
+          <div class="form-group"><label>Password</label><input type="password" id="hr_pass" placeholder="Min 6 characters"></div>
+          <div class="form-row">
+            <div class="form-group"><label>Area</label><input type="text" id="hr_area" placeholder="Koramangala"></div>
+            <div class="form-group"><label>City</label><input type="text" id="hr_city" placeholder="Bengaluru"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>PIN Code</label><input type="text" id="hr_pin" placeholder="560034"></div>
+            <div class="form-group"><label>State</label><input type="text" id="hr_state" placeholder="Karnataka"></div>
+          </div>
+          <div class="form-group"><label>Hospital Type</label>
+            <select id="hr_type">
+              <option>General</option><option>Multi-Specialty</option>
+              <option>Super-Specialty</option><option>Trauma Center</option><option>Children's Hospital</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>General Beds</label><input type="number" id="hr_beds" placeholder="100" min="0"></div>
+            <div class="form-group"><label>ICU Beds</label><input type="number" id="hr_icu" placeholder="20" min="0"></div>
+          </div>
+          <div class="form-group"><label>Emergency Beds</label><input type="number" id="hr_er" placeholder="10" min="0"></div>
+          <button class="btn-submit" id="hRegBtn" onclick="handleHospRegister()">Register Hospital →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ HOSPITAL DASHBOARD ═══════ -->
+<div id="hDashboard" style="display:none;">
+  <div class="dash-layout">
+    <div class="sidebar">
+      <div class="sidebar-logo">Medi<span>Q</span></div>
+      <div class="user-mini">
+        <div class="user-mini-name" id="hospSidebarName">—</div>
+        <div class="u-badge"><span class="dot-green"></span><span id="hospType">Hospital</span></div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-sec-label">Management</div>
+        <div class="nav-item active" onclick="showHospPage('overview')"><span class="nav-icon">◉</span> Overview</div>
+        <div class="nav-item" onclick="showHospPage('appointments')"><span class="nav-icon">📋</span> Appointments</div>
+        <div class="nav-item" onclick="showHospPage('queue')"><span class="nav-icon">🎫</span> Token Queue</div>
+        <div class="nav-item" onclick="showHospPage('beds')"><span class="nav-icon">🛏️</span> Bed Management</div>
+        <div class="nav-item" onclick="showHospPage('departments')"><span class="nav-icon">🏥</span> Departments</div>
+        <div class="nav-item" onclick="showHospPage('analytics')"><span class="nav-icon">📊</span> Analytics</div>
+        <div class="nav-sec-label" style="margin-top:14px;">Account</div>
+        <div class="nav-item" onclick="hospLogout()"><span class="nav-icon">←</span> Sign Out</div>
+      </div>
+      <div class="sos-box">
+        <div class="t">ER Status</div>
+        <div class="d">Toggle emergency room availability.</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <label class="toggle"><input type="checkbox" id="erToggle"><span class="toggle-slider"></span></label>
+          <span style="font-size:13px;color:rgba(250,247,242,0.5);">ER Open</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="topbar">
+        <div id="pageTitleBar" class="page-title">Overview</div>
+        <div id="hospTopbarName" style="font-size:13px;color:rgba(250,247,242,0.35);">—</div>
+      </div>
+
+      <!-- OVERVIEW -->
+      <div id="page-overview" class="page active">
+        <div class="stats-row">
+          <div class="stat-card"><div class="stat-label">Today's Appointments</div><div class="stat-value" id="statToday">—</div><div class="stat-sub">Booked today</div></div>
+          <div class="stat-card"><div class="stat-label">Pending Requests</div><div class="stat-value" id="statPending" style="color:var(--amber);">—</div><div class="stat-sub">Awaiting response</div></div>
+          <div class="stat-card"><div class="stat-label">Available Beds</div><div class="stat-value" id="statBeds" style="color:var(--green);">—</div><div class="stat-sub">of <span id="statTotalBeds">—</span> total</div></div>
+          <div class="stat-card"><div class="stat-label">ER Status</div><div class="stat-value" id="statER" style="font-size:18px;padding-top:6px;">—</div><div class="stat-sub">Emergency room</div></div>
+        </div>
+        <div class="sh"><h3>Recent Appointments</h3><button class="btn-sm red" onclick="showHospPage('appointments')">View All →</button></div>
+        <!-- Overview uses its own unique ID -->
+        <div id="apptTableOverview"></div>
+      </div>
+
+      <!-- APPOINTMENTS -->
+      <div id="page-appointments" class="page">
+        <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">
+          <button class="appt-filter-btn active" data-status="all"       onclick="filterAppointments('all')">All</button>
+          <button class="appt-filter-btn"        data-status="pending"   onclick="filterAppointments('pending')">Pending</button>
+          <button class="appt-filter-btn"        data-status="confirmed" onclick="filterAppointments('confirmed')">Confirmed</button>
+          <button class="appt-filter-btn"        data-status="completed" onclick="filterAppointments('completed')">Completed</button>
+          <button class="appt-filter-btn"        data-status="cancelled" onclick="filterAppointments('cancelled')">Cancelled</button>
+        </div>
+        <!-- Full appointments page uses its own unique ID -->
+        <div id="apptTableFull" style="overflow-x:auto;"></div>
+      </div>
+
+      <!-- TOKEN QUEUE -->
+      <div id="page-queue" class="page">
+        <div class="sh"><h3>Live Token Queue</h3><button class="btn-sm" onclick="loadQueue()">↻ Refresh</button></div>
+        <div id="queueList"><div class="spinner">Loading…</div></div>
+      </div>
+
+      <!-- BED MANAGEMENT -->
+      <div id="page-beds" class="page">
+        <div class="sh"><h3>Bed Management</h3><button class="btn-sm" onclick="loadBeds()">↻ Refresh</button></div>
+        <div id="bedsGrid"><div class="spinner">Loading…</div></div>
+      </div>
+
+      <!-- DEPARTMENTS -->
+      <div id="page-departments" class="page">
+        <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;">
+          <div>
+            <div class="sh"><h3>Departments</h3></div>
+            <div id="deptGrid"><div class="spinner">Loading…</div></div>
+          </div>
+          <div>
+            <div class="info-card">
+              <div class="ic-title">+ Add Department</div>
+              <div class="form-error" id="deptError"></div>
+              <div class="form-group"><label>Name</label><input type="text" id="newDeptName" placeholder="e.g. Cardiology"></div>
+              <div class="form-group"><label>Icon (emoji)</label><input type="text" id="newDeptIcon" placeholder="❤️" maxlength="4"></div>
+              <div class="form-group"><label>Head Doctor</label><input type="text" id="newDeptHead" placeholder="Dr. Name"></div>
+              <div class="form-group"><label>Doctor Count</label><input type="number" id="newDeptCount" placeholder="1" min="1"></div>
+              <button class="btn-submit" id="addDeptBtn" onclick="addDepartment()">+ Add Department</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANALYTICS -->
+      <div id="page-analytics" class="page">
+        <div class="sh"><h3>Analytics</h3></div>
+        <div id="analyticsContent"><div class="spinner">Loading…</div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- JS MODULES — order matters -->
+<script src="/js/api.js"></script>
+<script src="/js/hospital-auth.js"></script>
+<script src="/js/hospital-dashboard.js"></script>
+<script src="/js/hospital-appointments.js"></script>
+<script src="/js/hospital-beds.js"></script>
+</body>
+</html>
